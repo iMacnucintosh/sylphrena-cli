@@ -19,20 +19,20 @@ jobs:
 
       - name: Test modules
         run: |
-          result/bin/caelestia -v
-          result/bin/caelestia -h
-          result/bin/caelestia toggle -h
-          result/bin/caelestia scheme -h
-          result/bin/caelestia scheme list
-          result/bin/caelestia scheme get
-          result/bin/caelestia scheme set -n gruvbox -f hard -m dark -v content
-          result/bin/caelestia screenshot -h
-          result/bin/caelestia record -h
-          result/bin/caelestia clipboard -h
-          result/bin/caelestia emoji -h
-          result/bin/caelestia emoji
-          result/bin/caelestia wallpaper -h
-          result/bin/caelestia resizer -h
+          result/bin/sylph -v
+          result/bin/sylph -h
+          result/bin/sylph toggle -h
+          result/bin/sylph scheme -h
+          result/bin/sylph scheme list
+          result/bin/sylph scheme get
+          result/bin/sylph scheme set -n gruvbox -f hard -m dark -v content
+          result/bin/sylph screenshot -h
+          result/bin/sylph record -h
+          result/bin/sylph clipboard -h
+          result/bin/sylph emoji -h
+          result/bin/sylph emoji
+          result/bin/sylph wallpaper -h
+          result/bin/sylph resizer -h
 
       - name: Test graphical stuff
         env:
@@ -49,17 +49,17 @@ jobs:
           nix profile install 'nixpkgs#sway'
           sway &
           sleep 3  # Give Sway some time to start
-          result/bin/caelestia shell -d
+          result/bin/sylph shell -d
           sleep 3  # Give the shell some time to start (and die)
 
           # Test CLI graphical modules
-          result/bin/caelestia clipboard &
-          result/bin/caelestia emoji -p &
-          result/bin/caelestia shell -s
-          result/bin/caelestia shell drawers list
-          result/bin/caelestia shell mpris list
-          result/bin/caelestia shell notifs clear
+          result/bin/sylph clipboard &
+          result/bin/sylph emoji -p &
+          result/bin/sylph shell -s
+          result/bin/sylph shell drawers list
+          result/bin/sylph shell mpris list
+          result/bin/sylph shell notifs clear
 
           pgrep .quickshell-wra  # Fail job if shell died
-          result/bin/caelestia shell -k
+          result/bin/sylph shell -k
           killall sway  # Screw using IPC

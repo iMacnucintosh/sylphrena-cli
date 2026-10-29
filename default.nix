@@ -22,7 +22,7 @@
   qtctStyle ? "Darkly",
 }:
 python3.pkgs.buildPythonApplication {
-  pname = "caelestia-cli";
+  pname = "sylphrena-cli";
   version = "${rev}";
   src = ./.;
   pyproject = true;
@@ -37,7 +37,7 @@ python3.pkgs.buildPythonApplication {
     pillow
   ];
 
-  pythonImportsCheck = ["caelestia"];
+  pythonImportsCheck = ["sylphrena"];
 
   nativeBuildInputs = [installShellFiles];
   propagatedBuildInputs =
@@ -62,28 +62,28 @@ python3.pkgs.buildPythonApplication {
 
   patchPhase = ''
     # Replace qs config call with nix shell pkg bin
-    substituteInPlace src/caelestia/subcommands/shell.py \
-    	--replace-fail '"qs", "-c", "caelestia"' '"caelestia-shell"'
-    substituteInPlace src/caelestia/subcommands/screenshot.py \
-    	--replace-fail '"qs", "-c", "caelestia"' '"caelestia-shell"'
+    substituteInPlace src/sylphrena/subcommands/shell.py \
+    	--replace-fail '"qs", "-c", "sylphrena"' '"caelestia-shell"'
+    substituteInPlace src/sylphrena/subcommands/screenshot.py \
+    	--replace-fail '"qs", "-c", "sylphrena"' '"caelestia-shell"'
 
     # Use config bin instead of discord + fix todoist
-    substituteInPlace src/caelestia/subcommands/toggle.py \
+    substituteInPlace src/sylphrena/subcommands/toggle.py \
     	--replace-fail 'discord' ${discordBin} \
       --replace-fail '["todoist"]' '["todoist.desktop"]'
 
     # Use config style instead of darkly
-    substituteInPlace src/caelestia/data/templates/qtengine.json \
+    substituteInPlace src/sylphrena/data/templates/qtengine.json \
     	--replace-fail 'Darkly' '${qtctStyle}'
   '';
 
-  postInstall = "installShellCompletion completions/caelestia.fish";
+  postInstall = "installShellCompletion completions/sylph.fish";
 
   meta = {
-    description = "The main control script for the Caelestia dotfiles";
-    homepage = "https://github.com/caelestia-dots/cli";
+    description = "The main control script for Sylphrena Shell";
+    homepage = "https://github.com/iMacnucintosh/sylphrena-cli";
     license = lib.licenses.gpl3Only;
-    mainProgram = "caelestia";
+    mainProgram = "sylph";
     platforms = lib.platforms.linux;
   };
 }

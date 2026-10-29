@@ -1,5 +1,5 @@
 {
-  description = "CLI for Caelestia dots";
+  description = "CLI for Sylphrena Shell";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
@@ -25,12 +25,12 @@
     formatter = eachSystem (system: pkgsOf.${system}.alejandra);
 
     packages = eachSystem (system: rec {
-      caelestia-cli = pkgsOf.${system}.callPackage ./default.nix {
+      sylphrena-cli = pkgsOf.${system}.callPackage ./default.nix {
         rev = self.rev or self.dirtyRev;
         caelestia-shell = inputs.caelestia-shell.packages.${system}.default;
       };
-      with-shell = caelestia-cli.override {withShell = true;};
-      default = caelestia-cli;
+      with-shell = sylphrena-cli.override {withShell = true;};
+      default = sylphrena-cli;
     });
 
     devShells = eachSystem (system: {

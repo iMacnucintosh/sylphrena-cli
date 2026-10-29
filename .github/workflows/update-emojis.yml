@@ -1,4 +1,4 @@
-# Updates the emoji/glyph list in src/caelestia/data/emojis.txt
+# Updates the emoji/glyph list in src/sylphrena/data/emojis.txt
 
 name: Update emojis
 
@@ -17,7 +17,7 @@ jobs:
         with:
           client-id: ${{ secrets.CLIENT_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
-          commit-add: src/caelestia/data/emojis.txt
+          commit-add: src/sylphrena/data/emojis.txt
           commit-message: "chore(emoji): update emoji data [CI]"
 
       - name: Setup python
