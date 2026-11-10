@@ -9,6 +9,16 @@ from sylphrena.utils.io import fatal, warn
 from sylphrena.utils.paths import c_cache_dir
 
 
+
+def _no_thp() -> None:
+    """Disable transparent huge pages for the shell process (inherited across exec)."""
+    try:
+        import ctypes
+
+        ctypes.CDLL(None, use_errno=True).prctl(41, 1, 0, 0, 0)  # PR_SET_THP_DISABLE
+    except Exception:
+        pass
+
 class Command:
     args: Namespace
 
@@ -41,14 +51,16 @@ class Command:
         return subprocess.check_output(["qs", "-c", "sylphrena", *args], text=True)
 
     def start_shell(self) -> None:
+        # The shell is started without transparent huge pages: with THP "always" (Arch default)
+        # its many half-used heap areas got backed by 2 MB pages, ~180 MB more resident memory.
         args = ["qs", "-c", "sylphrena", "-n"]
         if self.args.log_rules:
             args.extend(["--log-rules", self.args.log_rules])
         if self.args.daemon:
             args.append("-d")
-            subprocess.run(args)
+            subprocess.run(args, preexec_fn=_no_thp)
         else:
-            shell = subprocess.Popen(args, stdout=subprocess.PIPE, universal_newlines=True)
+            shell = subprocess.Popen(args, stdout=subprocess.PIPE, universal_newlines=True, preexec_fn=_no_thp)
 
             # Ensure stdout is not None for the type checker
             if shell.stdout:
