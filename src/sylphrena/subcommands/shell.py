@@ -10,6 +10,23 @@ from sylphrena.utils.paths import c_cache_dir
 
 
 
+def _shell_env() -> dict[str, str]:
+    """Environment for the shell. A user-local plugin build (~/.local/lib/qt6/qml/Sylphrena, as left
+    by `cmake --install` with prefix ~/.local) must win over the system package's: Qt looks for it
+    through QT_ADDITIONAL_PACKAGES_PREFIX_PATH, which cannot be set from shell.qml without hardcoding
+    the user's home."""
+    import os
+    from pathlib import Path
+
+    env = dict(os.environ)
+    local = Path.home() / ".local/lib/qt6/qml"
+    if (local / "Sylphrena").is_dir():
+        current = env.get("QT_ADDITIONAL_PACKAGES_PREFIX_PATH", "")
+        if str(local) not in current.split(":"):
+            env["QT_ADDITIONAL_PACKAGES_PREFIX_PATH"] = f"{local}:{current}" if current else str(local)
+    return env
+
+
 def _no_thp() -> None:
     """Disable transparent huge pages for the shell process (inherited across exec)."""
     try:
@@ -58,9 +75,11 @@ class Command:
             args.extend(["--log-rules", self.args.log_rules])
         if self.args.daemon:
             args.append("-d")
-            subprocess.run(args, preexec_fn=_no_thp)
+            subprocess.run(args, preexec_fn=_no_thp, env=_shell_env())
         else:
-            shell = subprocess.Popen(args, stdout=subprocess.PIPE, universal_newlines=True, preexec_fn=_no_thp)
+            shell = subprocess.Popen(
+                args, stdout=subprocess.PIPE, universal_newlines=True, preexec_fn=_no_thp, env=_shell_env()
+            )
 
             # Ensure stdout is not None for the type checker
             if shell.stdout:
