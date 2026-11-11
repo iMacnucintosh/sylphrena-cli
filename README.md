@@ -1,6 +1,9 @@
-# caelestia-cli
+# sylphrena-cli
 
-The main control script for the Caelestia dotfiles.
+The main control script for **Sylphrena Shell**, a fork of the
+[Caelestia](https://github.com/caelestia-dots/shell) dotfiles for Hyprland.
+
+The command is `sylph`.
 
 <details><summary id="dependencies">External dependencies</summary>
 
@@ -20,21 +23,12 @@ The main control script for the Caelestia dotfiles.
 
 ## Installation
 
-### Arch linux
-
-The CLI is available from the AUR as `caelestia-cli`. You can install it with an AUR helper
-like [`yay`](https://github.com/Jguer/yay) or manually downloading the PKGBUILD and running `makepkg -si`.
-
-A package following the latest commit also exists as `caelestia-cli-git`. This is bleeding edge
-and likely to be unstable/have bugs. Regular users are recommended to use the stable package
-(`caelestia-cli`).
-
 ### Nix
 
 You can run the CLI directly via `nix run`:
 
 ```sh
-nix run github:caelestia-dots/cli
+nix run github:iMacnucintosh/sylphrena-cli
 ```
 
 Or add it to your system configuration:
@@ -44,27 +38,24 @@ Or add it to your system configuration:
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
-    caelestia-cli = {
-      url = "github:caelestia-dots/cli";
+    sylphrena-cli = {
+      url = "github:iMacnucintosh/sylphrena-cli";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 }
 ```
 
-The package is available as `caelestia-cli.packages.<system>.default`, which can be added to your
-`environment.systemPackages`, `users.users.<username>.packages`, `home.packages` if using home-manager,
-or a devshell. The CLI can then be used via the `caelestia` command.
+The package is available as `sylphrena-cli.packages.<system>.default`, which can be added to your
+`environment.systemPackages`, `users.users.<username>.packages`, `home.packages` if using
+home-manager, or a devshell. The CLI can then be used via the `sylph` command.
 
 > [!TIP]
-> The default package does not have the shell enabled by default, which is required for full functionality.
-> To enable the shell, use the `with-shell` package. This is the recommended installation method, as
-> the CLI exposes the shell via the `shell` subcommand, meaning there is no need for the shell package
-> to be exposed.
+> The default package does not have the shell enabled by default, which is required for full
+> functionality. To enable the shell, use the `with-shell` package.
 
-For home-manager, you can also use the Caelestia's home manager module (explained in
-[configuring](https://github.com/caelestia-dots/shell?tab=readme-ov-file#home-manager-module)) that
-installs and configures the shell and the CLI.
+> [!NOTE]
+> There is no AUR package yet: build it from source (see below) or use the Nix flake.
 
 ### Manual installation
 
@@ -80,25 +71,25 @@ e.g. via an AUR helper (yay)
 yay -S libnotify swappy grim dart-sass wl-clipboard slurp gpu-screen-recorder ffmpeg glib2 cliphist fuzzel python-build python-installer python-hatch python-hatch-vcs
 ```
 
-Now, clone the repo, `cd` into it, build the wheel via `python -m build --wheel`
-and install it via `python -m installer dist/*.whl`. Then, to install the `fish`
-completions, copy the `completions/caelestia.fish` file to
-`/usr/share/fish/vendor_completions.d/caelestia.fish`.
+Now, clone the repo, `cd` into it, build the wheel via `python -m build --wheel` and install it via
+`python -m installer dist/*.whl`. Then, to install the `fish` completions, copy the
+`completions/sylph.fish` file to `/usr/share/fish/vendor_completions.d/sylph.fish`.
 
 ```sh
-git clone https://github.com/caelestia-dots/cli.git
-cd cli
+git clone https://github.com/iMacnucintosh/sylphrena-cli.git
+cd sylphrena-cli
 python -m build --wheel
 sudo python -m installer dist/*.whl
-sudo cp completions/caelestia.fish /usr/share/fish/vendor_completions.d/caelestia.fish
+sudo cp completions/sylph.fish /usr/share/fish/vendor_completions.d/sylph.fish
 ```
 
 ### Additional steps
 
 #### Auto folder colour theming
 
-For automatic Papirus folder icon colour syncing, you must have [`papirus-folders`](https://github.com/PapirusDevelopmentTeam/papirus-folders)
-installed, and `papirus-folders` must to be able to run with `sudo` without a password prompt.
+For automatic Papirus folder icon colour syncing, you must have
+[`papirus-folders`](https://github.com/PapirusDevelopmentTeam/papirus-folders) installed, and
+`papirus-folders` must be able to run with `sudo` without a password prompt.
 
 You can allow this by creating a sudoers file:
 
@@ -109,27 +100,27 @@ sudo chmod 440 /etc/sudoers.d/papirus-folders
 
 #### Chromium-based browser theming
 
-For live Chromium-based browser theming, the CLI must be allowed to create certain directories in `/etc`
-and write to them via `sudo` without a password prompt.
+For live Chromium-based browser theming, the CLI must be allowed to create certain directories in
+`/etc` and write to them via `sudo` without a password prompt.
 
 You can allow this by creating a sudoers file:
 
 ```fish
 # Fish shell
 for dir in /etc/chromium/policies/managed /etc/brave/policies/managed /etc/opt/chrome/policies/managed
-    echo "$USER ALL=(ALL) NOPASSWD: $(which mkdir) -p $dir" | sudo tee -a /etc/sudoers.d/caelestia-chromium
-    echo "$USER ALL=(ALL) NOPASSWD: $(which tee) $dir/caelestia.json" | sudo tee -a /etc/sudoers.d/caelestia-chromium
+    echo "$USER ALL=(ALL) NOPASSWD: $(which mkdir) -p $dir" | sudo tee -a /etc/sudoers.d/sylphrena-chromium
+    echo "$USER ALL=(ALL) NOPASSWD: $(which tee) $dir/sylphrena.json" | sudo tee -a /etc/sudoers.d/sylphrena-chromium
 end
-sudo chmod 440 /etc/sudoers.d/caelestia-chromium
+sudo chmod 440 /etc/sudoers.d/sylphrena-chromium
 ```
 
 ```sh
 # Bash/other shells
 for dir in /etc/chromium/policies/managed /etc/brave/policies/managed /etc/opt/chrome/policies/managed; do
-    echo "$USER ALL=(ALL) NOPASSWD: $(which mkdir) -p $dir" | sudo tee -a /etc/sudoers.d/caelestia-chromium
-    echo "$USER ALL=(ALL) NOPASSWD: $(which tee) $dir/caelestia.json" | sudo tee -a /etc/sudoers.d/caelestia-chromium
+    echo "$USER ALL=(ALL) NOPASSWD: $(which mkdir) -p $dir" | sudo tee -a /etc/sudoers.d/sylphrena-chromium
+    echo "$USER ALL=(ALL) NOPASSWD: $(which tee) $dir/sylphrena.json" | sudo tee -a /etc/sudoers.d/sylphrena-chromium
 done
-sudo chmod 440 /etc/sudoers.d/caelestia-chromium
+sudo chmod 440 /etc/sudoers.d/sylphrena-chromium
 ```
 
 ## Usage
@@ -137,10 +128,10 @@ sudo chmod 440 /etc/sudoers.d/caelestia-chromium
 All subcommands/options can be explored via the help flag.
 
 ```
-$ caelestia -h
-usage: caelestia [-h] [-v] COMMAND ...
+$ sylph -h
+usage: sylph [-h] [-v] COMMAND ...
 
-Main control script for the Caelestia dotfiles
+Main control script for the Sylphrena Shell
 
 options:
   -h, --help     show this help message and exit
@@ -159,13 +150,13 @@ subcommands:
     emoji        emoji/glyph utilities
     wallpaper    manage the wallpaper
     resizer      window resizer daemon
-    install      install the Caelestia dotfiles
-    update       update the Caelestia dotfiles
+    install      install the Sylphrena Shell
+    update       update the Sylphrena Shell
 ```
 
 ### User templates
 
-Custom user templates can be defined in `~/.config/caelestia/templates/`.
+Custom user templates can be defined in `~/.config/sylphrena/templates/`.
 
 #### Template syntax
 
@@ -182,11 +173,12 @@ Custom user templates can be defined in `~/.config/caelestia/templates/`.
 - `{{ primary.hsl }}` outputs `hsl(268,41%,66%)`
 - `{{ primary.hue }}` outputs `268`
 
-Output files are written to `~/.local/state/caelestia/theme/`. You can symlink them to your desired locations.
+Output files are written to `~/.local/state/sylphrena/theme/`. You can symlink them to your desired
+locations.
 
 ## Configuring
 
-All configuration options are in `~/.config/caelestia/cli.json`.
+All configuration options are in `~/.config/sylphrena/cli.json`.
 
 <details><summary>Example configuration</summary>
 
@@ -239,18 +231,13 @@ All configuration options are in `~/.config/caelestia/cli.json`.
                 "match": [{ "class": "Spotify" }, { "initialTitle": "Spotify" }, { "initialTitle": "Spotify Free" }],
                 "command": ["spicetify", "watch", "-s"],
                 "move": true
-            },
-            "feishin": {
-                "enable": true,
-                "match": [{ "class": "feishin" }],
-                "move": true
             }
         },
         "sysmon": {
             "btop": {
                 "enable": true,
                 "match": [{ "class": "btop", "title": "btop", "workspace": { "name": "special:sysmon" } }],
-                "command": ["foot", "-a", "btop", "-T", "btop", "fish", "-C", "exec btop"]
+                "command": ["kitty", "-a", "btop", "-T", "btop"]
             }
         },
         "todo": {
@@ -270,3 +257,26 @@ All configuration options are in `~/.config/caelestia/cli.json`.
 ```
 
 </details>
+
+## Differences from upstream
+
+This is the CLI of the Sylphrena fork. Renames applied on top of
+[`caelestia-dots/cli`](https://github.com/caelestia-dots/cli):
+
+| Upstream | Sylphrena |
+| --- | --- |
+| command `caelestia` | command `sylph` |
+| package `caelestia` | package `sylphrena` |
+| `~/.config/caelestia` | `~/.config/sylphrena` |
+| `~/.local/state/caelestia` | `~/.local/state/sylphrena` |
+| `~/.cache/caelestia` | `~/.cache/sylphrena` |
+| `CAELESTIA_*` env vars | `SYLPHRENA_*` (old ones still read) |
+| Quickshell instance `caelestia` | Quickshell instance `sylphrena` |
+| theme files `caelestia.*` | theme files `sylphrena.*` |
+
+Upstream URLs, the legacy-install detector (which looks for the old Caelestia repository) and the
+`caelestia-meta` package name are intentionally left untouched.
+
+## Licence
+
+GPL-3.0-only, same as upstream. Original work © the Caelestia contributors.
