@@ -4,6 +4,7 @@ import sys
 from sylphrena.subcommands import (
     clipboard,
     emoji,
+    ext,
     install,
     record,
     resizer,
@@ -168,6 +169,13 @@ def parse_args() -> tuple[argparse.ArgumentParser, argparse.Namespace]:
     update_parser.set_defaults(cls=update.Command)
     update_parser.add_argument("--aur-helper", choices=AUR_HELPERS, help="the AUR helper to use")
     update_parser.add_argument("--noconfirm", action="store_true", help="use defaults for all prompts")
+
+    # Extensions: the shell's own tool (list, install <zip>, remove <id> [--purge], enable, disable…)
+    ext_parser = command_parser.add_parser(
+        "ext", help="manage the shell's extensions (list, install <zip>, remove <id> [--purge], enable, disable)"
+    )
+    ext_parser.set_defaults(cls=ext.Command)
+    ext_parser.add_argument("ext_args", nargs=argparse.REMAINDER, help="what to do; run `sylph ext` alone for the list")
 
     return parser, parser.parse_args()
 
