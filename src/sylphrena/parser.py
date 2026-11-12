@@ -172,7 +172,7 @@ def parse_args() -> tuple[argparse.ArgumentParser, argparse.Namespace]:
 
     # Extensions: the shell's own tool (list, install <zip>, remove <id> [--purge], enable, disable…)
     ext_parser = command_parser.add_parser(
-        "ext", help="manage the shell's extensions (list, install <zip>, remove <id> [--purge], enable, disable)"
+        "ext", help="manage the shell's extensions (list, install <zip>, remove <id> [--purge], enable, disable) or run their commands (<id> <command> [args])"
     )
     ext_parser.set_defaults(cls=ext.Command)
     ext_parser.add_argument("ext_args", nargs=argparse.REMAINDER, help="what to do; run `sylph ext` alone for the list")
