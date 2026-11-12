@@ -1,7 +1,7 @@
 set -l seen '__fish_seen_subcommand_from'
 set -l has_opt '__fish_contains_opt'
 
-set -l commands shell toggle scheme screenshot record clipboard emoji wallpaper resizer install update
+set -l commands shell toggle scheme screenshot record clipboard emoji wallpaper resizer install update ext
 set -l not_seen "not $seen $commands"
 
 # Disable file completions
@@ -22,6 +22,41 @@ complete -c sylph -n $not_seen -a 'wallpaper' -d 'Manage the wallpaper'
 complete -c sylph -n $not_seen -a 'resizer' -d 'Window resizer'
 complete -c sylph -n $not_seen -a 'install' -d 'Install the Sylphrena Shell'
 complete -c sylph -n $not_seen -a 'update' -d 'Update the Sylphrena Shell'
+complete -c sylph -n $not_seen -a 'ext' -d 'Extensions: manage them or run their commands'
+
+# Extensions: `sylph ext <Tab>` offers the actions and the installed extensions, `sylph ext <id> <Tab>` its commands
+# (read from the manifests: the shell does not need to run)
+function __sylph_ext_manifests
+    for dir in $XDG_DATA_HOME/sylphrena/extensions ~/.local/share/sylphrena/extensions ~/.config/quickshell/sylphrena/extensions /etc/xdg/quickshell/sylphrena/extensions
+        test -d $dir; and for m in $dir/*/manifest.json
+            echo $m
+        end
+    end
+end
+function __sylph_extensions
+    for m in (__sylph_ext_manifests)
+        python3 -c 'import json,sys; m=json.load(open(sys.argv[1])); print(m["id"]+"\t"+m.get("name", m["id"]))' $m 2>/dev/null
+    end
+end
+function __sylph_ext_commands
+    for m in (__sylph_ext_manifests)
+        python3 -c 'import json,sys
+m=json.load(open(sys.argv[1]))
+if m.get("id") == sys.argv[2]:
+    for c in m.get("contributes", {}).get("commands", []):
+        print(c["name"]+"\t"+c.get("description", ""))' $m $argv[1] 2>/dev/null
+    end
+end
+function __sylph_ext_at -a n
+    set -l t (commandline -opc)
+    test (count $t) -eq $n; and test "$t[2]" = ext
+end
+set -l ext_verbs list info inspect install install-hub update-hub remove enable disable rescan
+complete -c sylph -n '__sylph_ext_at 2' -a "$ext_verbs" -d 'Action'
+complete -c sylph -n '__sylph_ext_at 2' -a '(__sylph_extensions)'
+complete -c sylph -n '__sylph_ext_at 3; and contains -- (commandline -opc)[3] remove enable disable update-hub' -a '(__sylph_extensions)'
+complete -c sylph -n '__sylph_ext_at 3; and not contains -- (commandline -opc)[3] list info inspect install install-hub update-hub remove enable disable rescan' -a '(__sylph_ext_commands (commandline -opc)[3])'
+complete -c sylph -n '__sylph_ext_at 3; and contains -- (commandline -opc)[3] install inspect' -F
 
 # Shell
 set -l commands mpris drawers wallpaper notifs

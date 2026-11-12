@@ -1,0 +1,95 @@
+#compdef sylph
+# zsh completion for sylph (the Sylphrena CLI). `sylph ext <Tab>` offers the installed extensions and
+# `sylph ext <id> <Tab>` their commands, read from the extensions' manifests (no need for the shell to run).
+
+_sylph_ext_dirs() {
+  local d
+  for d in "${XDG_DATA_HOME:-$HOME/.local/share}/sylphrena/extensions" \
+           "$HOME/.config/quickshell/sylphrena/extensions" \
+           /etc/xdg/quickshell/sylphrena/extensions; do
+    [[ -d $d ]] && print -r -- "$d"
+  done
+}
+
+# "id:name" of every installed extension
+_sylph_extensions() {
+  local dir m
+  for dir in $(_sylph_ext_dirs); do
+    for m in "$dir"/*/manifest.json(N); do
+      python3 -c 'import json,sys; m=json.load(open(sys.argv[1])); print(m["id"]+":"+m.get("name", m["id"]))' "$m" 2>/dev/null
+    done
+  done
+}
+
+# "command:description" of one extension
+_sylph_ext_commands() {
+  local dir m
+  for dir in $(_sylph_ext_dirs); do
+    m="$dir/$1/manifest.json"
+    [[ -f $m ]] || continue
+    python3 -c 'import json,sys
+for c in json.load(open(sys.argv[1])).get("contributes", {}).get("commands", []):
+    print(c["name"] + ":" + c.get("description", ""))' "$m" 2>/dev/null
+    return
+  done
+}
+
+_sylph_ext() {
+  local -a verbs exts cmds
+  verbs=(
+    'list:installed extensions'
+    'info:the shell version and the extension API'
+    'inspect:what a zip would install'
+    'install:install an extension from a zip'
+    'install-hub:install an extension from the hub'
+    'update-hub:install the version the hub has now'
+    'remove:remove an extension'
+    'enable:enable an extension'
+    'disable:disable an extension'
+    'rescan:look for extensions again'
+  )
+  if (( CURRENT == 2 )); then
+    exts=("${(@f)$(_sylph_extensions)}")
+    _describe -t verbs 'action' verbs
+    _describe -t extensions 'extension' exts
+    return
+  fi
+  case $words[2] in
+    install|inspect) _files -g '*.zip' ;;
+    remove|enable|disable|update-hub)
+      (( CURRENT == 3 )) && { exts=("${(@f)$(_sylph_extensions)}"); _describe -t extensions 'extension' exts; } ;;
+    list|info|rescan|install-hub) ;;
+    *)
+      (( CURRENT == 3 )) && { cmds=("${(@f)$(_sylph_ext_commands $words[2])}"); _describe -t commands 'command' cmds; } ;;
+  esac
+}
+
+_sylph() {
+  local -a subcommands
+  subcommands=(
+    'shell:start or message the shell'
+    'toggle:toggle a special workspace'
+    'scheme:manage the colour scheme'
+    'screenshot:take a screenshot'
+    'record:start a screen recording'
+    'clipboard:open clipboard history'
+    'emoji:emoji/glyph utilities'
+    'wallpaper:manage the wallpaper'
+    'resizer:window resizer daemon'
+    'ext:extensions: manage them or run their commands'
+    'update:update the Sylphrena Shell'
+  )
+  if (( CURRENT == 2 )); then
+    _describe -t subcommands 'sylph command' subcommands
+    return
+  fi
+  shift words
+  (( CURRENT-- ))
+  case $words[1] in
+    ext) _sylph_ext ;;
+    scheme) (( CURRENT == 2 )) && _values 'scheme action' list get set ;;
+    wallpaper|screenshot) _files ;;
+  esac
+}
+
+_sylph "$@"

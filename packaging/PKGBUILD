@@ -40,4 +40,5 @@ package() {
   cd sylphrena-cli
   python -m installer --destdir="$pkgdir" dist/*.whl
   install -Dm644 completions/sylph.fish "$pkgdir/usr/share/fish/vendor_completions.d/sylph.fish"
+  install -Dm644 completions/_sylph "$pkgdir/usr/share/zsh/site-functions/_sylph"
 }
