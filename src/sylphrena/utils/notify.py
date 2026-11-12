@@ -1,8 +1,11 @@
 import subprocess
 
+# Display name in notifications (was "sylphrena-cli").
+NOTIFY_APP = "Sylphrena"
+
 
 def notify(*args: str) -> str:
-    return subprocess.check_output(["notify-send", "-a", "sylphrena-cli", *args], text=True).strip()
+    return subprocess.check_output(["notify-send", "-a", NOTIFY_APP, *args], text=True).strip()
 
 
 def close_notification(id: str) -> None:
