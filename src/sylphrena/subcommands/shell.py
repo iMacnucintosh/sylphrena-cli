@@ -4,10 +4,10 @@ import signal
 import subprocess
 import time
 from argparse import Namespace
+from pathlib import Path
 
 from sylphrena.utils.io import fatal, warn
 from sylphrena.utils.paths import c_cache_dir
-
 
 
 def _shell_env() -> dict[str, str]:
@@ -15,9 +15,6 @@ def _shell_env() -> dict[str, str]:
     by `cmake --install` with prefix ~/.local) must win over the system package's: Qt looks for it
     through QT_ADDITIONAL_PACKAGES_PREFIX_PATH, which cannot be set from shell.qml without hardcoding
     the user's home."""
-    import os
-    from pathlib import Path
-
     env = dict(os.environ)
     local = Path.home() / ".local/lib/qt6/qml"
     if (local / "Sylphrena").is_dir():
@@ -35,6 +32,7 @@ def _no_thp() -> None:
         ctypes.CDLL(None, use_errno=True).prctl(41, 1, 0, 0, 0)  # PR_SET_THP_DISABLE
     except Exception:
         pass
+
 
 class Command:
     args: Namespace

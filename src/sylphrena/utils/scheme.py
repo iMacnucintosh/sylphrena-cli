@@ -207,10 +207,6 @@ def read_colours_from_file(path: Path) -> dict[str, str]:
     }
 
 
-def get_scheme_path() -> Path:
-    return get_scheme().get_colours_path()
-
-
 def get_scheme() -> Scheme:
     global scheme
 
