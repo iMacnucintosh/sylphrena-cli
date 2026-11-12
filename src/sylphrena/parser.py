@@ -1,5 +1,4 @@
 import argparse
-import sys
 
 from sylphrena.subcommands import (
     clipboard,
@@ -15,10 +14,6 @@ from sylphrena.subcommands import (
     update,
     wallpaper,
 )
-from sylphrena.utils.dots.manifest import Manifest
-from sylphrena.utils.dots.packages import AUR_HELPERS
-from sylphrena.utils.dots.source import DotsSource
-from sylphrena.utils.io import warn
 from sylphrena.utils.paths import wallpapers_dir
 from sylphrena.utils.scheme import get_scheme_names, scheme_variants
 from sylphrena.utils.wallpaper import get_wallpaper
@@ -147,28 +142,18 @@ def parse_args() -> tuple[argparse.ArgumentParser, argparse.Namespace]:
     resizer_parser.add_argument("height", nargs="?", help="height to resize to")
     resizer_parser.add_argument("actions", nargs="?", help="comma-separated actions to apply (float,center,pip)")
 
-    # Create parser for install opts
+    # Installing and updating are the shell's installer (scripts/installer.py); its options pass through
     install_parser = command_parser.add_parser(
-        "install",
-        help="install the Sylphrena Shell",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
+        "install", add_help=False, help="install Sylphrena: what is missing on this computer (`sylph install --help`)"
     )
     install_parser.set_defaults(cls=install.Command)
-    install_parser.add_argument("--aur-helper", choices=AUR_HELPERS, help="the AUR helper to use")
-    install_parser.add_argument(
-        "--enable-components", metavar="LIST", help="comma-separated list of components to enable"
-    )
-    install_parser.add_argument(
-        "--disable-components", metavar="LIST", help="comma-separated list of components to disable"
-    )
-    install_parser.add_argument("--noconfirm", action="store_true", help="use defaults for all prompts")
-    _set_install_epilog(install_parser)
+    install_parser.add_argument("installer_args", nargs=argparse.REMAINDER, help=argparse.SUPPRESS)
 
-    # Create parser for update opts
-    update_parser = command_parser.add_parser("update", help="update the Sylphrena Shell")
+    update_parser = command_parser.add_parser(
+        "update", add_help=False, help="bring Sylphrena and what it installed up to date (`sylph update --help`)"
+    )
     update_parser.set_defaults(cls=update.Command)
-    update_parser.add_argument("--aur-helper", choices=AUR_HELPERS, help="the AUR helper to use")
-    update_parser.add_argument("--noconfirm", action="store_true", help="use defaults for all prompts")
+    update_parser.add_argument("installer_args", nargs=argparse.REMAINDER, help=argparse.SUPPRESS)
 
     # Extensions: the shell's own tool (list, install <zip>, remove <id> [--purge], enable, disable…)
     ext_parser = command_parser.add_parser(
@@ -177,39 +162,11 @@ def parse_args() -> tuple[argparse.ArgumentParser, argparse.Namespace]:
     ext_parser.set_defaults(cls=ext.Command)
     ext_parser.add_argument("ext_args", nargs=argparse.REMAINDER, help="what to do; run `sylph ext` alone for the list")
 
-    return parser, parser.parse_args()
+    # The installer's options (--dry-run, --yes, --help…) are its own: whatever argparse does not know goes to it
+    args, extra = parser.parse_known_args()
+    if extra and getattr(args, "cls", None) in (install.Command, update.Command):
+        args.installer_args = extra + args.installer_args
+    elif extra:
+        parser.error(f"unrecognized arguments: {' '.join(extra)}")
+    return parser, args
 
-
-def _set_install_epilog(install_parser: argparse.ArgumentParser) -> None:
-    """Add components if using install subcommand"""
-
-    if len(sys.argv) > 1 and sys.argv[1] == "install":
-        manifest = _load_install_manifest()
-        if manifest is not None and manifest.components:
-            install_parser.epilog = _components_epilog(manifest)
-
-
-def _load_install_manifest() -> Manifest | None:
-    source = DotsSource()
-    try:
-        source.ensure()
-        return source.manifest_at(source.remote_ref)
-    except Exception as e:
-        warn(f"failed to load manifest from dots repo ({e})\n", prefix=False)
-        return None
-
-
-def _components_epilog(manifest: Manifest) -> str:
-    def e(*v: int) -> str:
-        return f"\033[{';'.join(str(c) for c in v)}m"
-
-    def b(c: int) -> str:
-        return e(1, c)
-
-    reset = e(0)
-
-    width = max(len(name) for name in manifest.components)
-    lines = [f"{b(34)}available components (for --enable-components / --disable-components):{reset}"]
-    for name, comp in manifest.components.items():
-        lines.append(f"  {b(32)}{name:<{width}}{reset}\t{'(default)' if comp.default else '(off)'}")
-    return "\n".join(lines)
