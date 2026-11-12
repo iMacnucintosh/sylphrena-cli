@@ -7,24 +7,33 @@ from datetime import datetime
 from pathlib import Path
 
 from sylphrena.utils import hypr
+from sylphrena.utils.i18n import tr
 from sylphrena.utils.notify import close_notification, notify
 from sylphrena.utils.paths import get_config, recording_notif_path, recording_path, recordings_dir
 
 RECORDER = "gpu-screen-recorder"
+# Freedesktop icon name (Papirus has media-record / gpu-screen-recorder).
+RECORD_ICON = "media-record"
 
-# Handles the "Recording stopped" notification actions in a tiny detached shell
-# process, so `sylph record` can exit as soon as the recording is saved.
+# Handles the stopped notification actions in a tiny detached shell process so
+# `sylph record` can exit as soon as the recording is saved.
+# Args: path uri directory title body watch_label open_label delete_label
 _STOPPED_NOTIF_HANDLER = r"""
 path=$1
 uri=$2
 directory=$3
+title=$4
+body=$5
+watch_label=$6
+open_label=$7
+delete_label=$8
 
-action=$(notify-send -a sylphrena-cli \
-    --action=watch=Watch \
-    --action=open=Open \
-    --action=delete=Delete \
-    "Recording stopped" \
-    "Recording saved in $path") || exit 0
+action=$(notify-send -a Sylphrena -i media-record \
+    --action=watch="$watch_label" \
+    --action=open="$open_label" \
+    --action=delete="$delete_label" \
+    "$title" \
+    "$body") || exit 0
 
 case "$action" in
     watch)
@@ -124,16 +133,21 @@ class Command:
             start_new_session=True,
         )
 
-        notif = notify("-p", "Recording started", "Recording...")
+        notif = notify("-p", "-i", RECORD_ICON, tr("Recording started"), tr("Recording..."))
         recording_notif_path.write_text(notif)
 
         try:
             if proc.wait(1) != 0:
                 close_notification(notif)
                 notify(
-                    "Recording failed",
-                    "An error occurred attempting to start recorder. "
-                    f"Command `{' '.join(proc.args)}` failed with exit code {proc.returncode}",
+                    "-i",
+                    RECORD_ICON,
+                    tr("Recording failed"),
+                    tr(
+                        "An error occurred attempting to start recorder. Command `{cmd}` failed with exit code {code}",
+                        cmd=" ".join(proc.args),
+                        code=proc.returncode,
+                    ),
                 )
         except subprocess.TimeoutExpired:
             pass
@@ -162,6 +176,7 @@ class Command:
             subprocess.run(["wl-copy", "--type", "text/uri-list"], input=file_uri.encode())
 
         recording = new_path.resolve()
+        body = tr("Recording saved in {path}", path=str(recording))
 
         # The action notification's lifetime is the user's interaction with it,
         # not this command's, so hand it off to a detached lightweight handler
@@ -174,6 +189,11 @@ class Command:
                 str(recording),
                 recording.as_uri(),
                 str(recording.parent),
+                tr("Recording stopped"),
+                body,
+                tr("Watch"),
+                tr("Open"),
+                tr("Delete"),
             ],
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
