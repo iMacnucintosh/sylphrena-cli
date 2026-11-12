@@ -11,7 +11,7 @@ license=('GPL-3.0-only')
 depends=('python' 'python-pillow' 'python-materialyoucolor')
 makedepends=('git' 'python-build' 'python-installer' 'python-hatchling' 'python-hatch-vcs')
 optdepends=('wl-clipboard: copy screenshots and colours'
-            'grim: screenshots' 'slurp: select a region' 'wf-recorder: screen recording'
+            'grim: screenshots' 'slurp: select a region' 'gpu-screen-recorder: screen recording (sylph record)'
             'swappy: edit screenshots' 'libnotify: notifications')
 provides=('sylphrena-cli')
 conflicts=('sylphrena-cli')
