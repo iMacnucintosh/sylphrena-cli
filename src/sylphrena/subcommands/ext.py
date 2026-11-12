@@ -42,5 +42,6 @@ class Command:
         self.args = args
 
     def run(self) -> None:
-        # The tool does the work (list | info | inspect | install <zip> | remove <id> [--purge] | enable | disable | rescan)
+        # The tool does the work (list | info | inspect | install <zip> | remove <id> [--purge] | enable | disable | rescan,
+        # or <id> [<command> [args]]: the commands an extension offers)
         os.execv(sys.executable, [sys.executable, _tool(), *self.args.ext_args])
