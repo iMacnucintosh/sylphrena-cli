@@ -15,7 +15,8 @@ optdepends=('wl-clipboard: copy screenshots and colours'
             'swappy: edit screenshots' 'libnotify: notifications')
 provides=('sylphrena-cli')
 conflicts=('sylphrena-cli')
-source=("git+${url}.git")
+# SYLPHRENA_REF=<tag> builds that release (the Sylphrena installer and its updates set it); without it, the latest commit
+source=("git+${url}.git${SYLPHRENA_REF:+#tag=$SYLPHRENA_REF}")
 sha256sums=('SKIP')
 
 pkgver() {
