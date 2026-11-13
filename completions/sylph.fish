@@ -20,8 +20,8 @@ complete -c sylph -n $not_seen -a 'clipboard' -d 'Open clipboard history'
 complete -c sylph -n $not_seen -a 'emoji' -d 'Emoji/glyph utilities'
 complete -c sylph -n $not_seen -a 'wallpaper' -d 'Manage the wallpaper'
 complete -c sylph -n $not_seen -a 'resizer' -d 'Window resizer'
-complete -c sylph -n $not_seen -a 'install' -d 'Install the Sylphrena Shell'
-complete -c sylph -n $not_seen -a 'update' -d 'Update the Sylphrena Shell'
+complete -c sylph -n $not_seen -a 'install' -d 'Install Sylphrena (what is missing)'
+complete -c sylph -n $not_seen -a 'update' -d 'Bring Sylphrena up to date'
 complete -c sylph -n $not_seen -a 'ext' -d 'Extensions: manage them or run their commands'
 
 # Extensions: `sylph ext <Tab>` offers the actions and the installed extensions, `sylph ext <id> <Tab>` its commands
@@ -165,12 +165,13 @@ complete -c sylph -n "$seen resizer" -s 'd' -l 'daemon' -d 'Start in daemon mode
 complete -c sylph -n "$seen resizer" -a 'pip' -d 'Quick pip mode'
 complete -c sylph -n "$seen resizer" -a 'active' -d 'Select the active window'
 
-# Install (component flags come from the manifest, so are not completed statically)
-complete -c sylph -n "$seen install" -l 'aur-helper' -d 'The AUR helper to use' -a 'yay paru' -r
-complete -c sylph -n "$seen install" -l 'enable-components' -d 'List of components to enable' -r
-complete -c sylph -n "$seen install" -l 'disable-components' -d 'List of components to disable' -r
-complete -c sylph -n "$seen install" -l 'noconfirm' -d 'Use defaults for all prompts'
-
-# Update
-complete -c sylph -n "$seen update" -l 'aur-helper' -d 'The AUR helper to use' -a 'yay paru' -r
-complete -c sylph -n "$seen update" -l 'noconfirm' -d 'Use defaults for all prompts'
+# Install / update: the Sylphrena installer's options
+for c in install update
+    complete -c sylph -n "$seen $c" -l 'dry-run' -d 'Show what it would do, change nothing'
+    complete -c sylph -n "$seen $c" -s 'y' -l 'yes' -d 'Accept the defaults'
+    complete -c sylph -n "$seen $c" -l 'main' -d 'Build the latest commit instead of the latest release'
+    complete -c sylph -n "$seen $c" -l 'verbose' -d 'Show the output of every command'
+    complete -c sylph -n "$seen $c" -l 'help' -d 'The installer\'s help'
+end
+complete -c sylph -n "$seen install" -l 'no-login-screen' -d 'Leave the login screen as it is'
+complete -c sylph -n "$seen install" -l 'list' -d 'What it found, as JSON'

@@ -77,7 +77,8 @@ _sylph() {
     'wallpaper:manage the wallpaper'
     'resizer:window resizer daemon'
     'ext:extensions: manage them or run their commands'
-    'update:update the Sylphrena Shell'
+    'install:install Sylphrena (what is missing)'
+    'update:bring Sylphrena up to date'
   )
   if (( CURRENT == 2 )); then
     _describe -t subcommands 'sylph command' subcommands
@@ -89,6 +90,7 @@ _sylph() {
     ext) _sylph_ext ;;
     scheme) (( CURRENT == 2 )) && _values 'scheme action' list get set ;;
     wallpaper|screenshot) _files ;;
+    install|update) _arguments '--dry-run[show what it would do]' '(-y --yes)'{-y,--yes}'[accept the defaults]' '--main[build the latest commit]' '--verbose[show every command]' '--help[the installer help]' ;;
   esac
 }
 

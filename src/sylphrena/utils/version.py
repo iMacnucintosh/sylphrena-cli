@@ -1,14 +1,10 @@
 import shutil
 import subprocess
 import sys
-from pathlib import Path
 
-from sylphrena.utils.dots.legacy import LEGACY_META_PKG, detect_legacy_repo
-from sylphrena.utils.dots.packages import ArchInstaller
-from sylphrena.utils.dots.source import DotsSource, SourceError
-from sylphrena.utils.dots.state import DotsState
 from sylphrena.utils.paths import config_dir
 
+# Sylphrena's packages are built from git (-git); the plain names are checked too
 PKGS = ("sylphrena-shell", "sylphrena-cli", "quickshell")
 INDENT = "    "
 
@@ -21,97 +17,32 @@ def _header(text: str, suffix: str = "") -> None:
         print(f"{text}{suffix}")
 
 
-def _rows(pairs: list[tuple[str, str]], align: bool = False) -> None:
+def _rows(pairs: list[tuple[str, str]]) -> None:
     dim = sys.stdout.isatty()
-    width = max((len(key) for key, _ in pairs), default=0) if align else 0
+    width = max((len(key) for key, _ in pairs), default=0)
     for key, value in pairs:
         if dim:
             value = f"\033[2m{value}\033[0m"
-        label = key.ljust(width) if align else f"{key}:"
-        print(f"{INDENT}{label}  {value}" if align else f"{INDENT}{label} {value}")
+        print(f"{INDENT}{key.ljust(width)}  {value}")
 
 
-def _commit(commit: str, message: str) -> str:
-    sha = commit[:7]
-    subject = message.splitlines()[0] if message else ""
-    return f"{sha} ({subject})" if subject else sha
+def _package_version(name: str) -> str | None:
+    for pkg in (name, f"{name}-git"):
+        r = subprocess.run(["pacman", "-Q", pkg], capture_output=True, text=True)
+        if r.returncode == 0 and len(r.stdout.split()) > 1:
+            return r.stdout.split()[1]
+    return None
 
 
-def _commit_from_meta(meta: tuple[str, str] | None) -> str:
-    if meta:
-        commit, message = meta
-        return _commit(commit, message)
-    return "unknown"
-
-
-def fetch_git_metadata(repo_dir: Path, branch: str = "upstream/main") -> tuple[str, str] | None:
-    try:
-        output = subprocess.check_output(
-            ["git", "-C", repo_dir, "show", "-s", "--format=%H%x00%s", branch],
-            stderr=subprocess.DEVNULL,
-            text=True,
-        )
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        return None
-
-    commit, separator, message = output.rstrip("\n").partition("\0")
-    return (commit, message) if separator else None
-
-
-def print_packages() -> tuple[str, str] | None:
+def print_packages() -> None:
     if not shutil.which("pacman"):
         _header("Packages:", "not on Arch")
-        return None
-
+        return
     _header("Packages:")
-    installer = ArchInstaller("")  # Dummy helper cause we only use query
-    installed = [(pkg, installer.query(pkg)) for pkg in PKGS]
-    missing = [(pkg, "not installed") for pkg, result in installed if result is None]
-    present = [result for _, result in installed if result is not None]
-    _rows(missing + present, align=True)
-
-    return installer.query(LEGACY_META_PKG)
-
-
-def print_legacy_install(meta_package: tuple[str, str] | None) -> None:
-    legacy_path = detect_legacy_repo()
-    if legacy_path is None and meta_package is None:
-        return
-
-    print()
-    _header("Legacy install detected:")
-    meta_row = (LEGACY_META_PKG, "not installed") if meta_package is None else meta_package
-    _rows([("Legacy dots path", str(legacy_path or "not found")), meta_row])
-    update_msg = "Please update the CLI to the latest version and run 'sylph install' to update the dots."
-    if sys.stdout.isatty():
-        update_msg = f"\033[1m{update_msg}\033[0m"
-    print(f"{INDENT}{update_msg}")
-
-
-def print_dots_version() -> None:
-    state = DotsState.load()
-    if state.applied_rev is None:
-        _header("Dots:", "not installed")
-        return
-
-    _header("Dots:")
-    source = DotsSource()
-    try:
-        message = source.commit_message_at(state.applied_rev)
-    except (SourceError, FileNotFoundError):
-        message = ""
-    components = ", ".join(state.enabled_components) or "none"
-    _rows(
-        [
-            ("Commit", _commit(state.applied_rev, message)),
-            ("Components", components),
-            ("AUR helper", state.aur_helper if shutil.which("pacman") else "not on Arch"),
-        ]
-    )
+    _rows([(pkg, _package_version(pkg) or "not installed") for pkg in PKGS])
 
 
 def _shell_version() -> str:
-    """Read the shell version helper, trying the new path before the legacy one."""
     for helper in ("/usr/lib/sylphrena/version", "/usr/lib/caelestia/version"):
         try:
             return subprocess.check_output([helper, "-s"], text=True).strip()
@@ -121,11 +52,7 @@ def _shell_version() -> str:
 
 
 def print_version() -> None:
-    meta_package = print_packages()
-    print_legacy_install(meta_package)
-
-    print()
-    print_dots_version()
+    print_packages()
 
     print()
     try:
@@ -144,14 +71,10 @@ def print_version() -> None:
         _header("Quickshell:", "not in PATH")
 
     local_shell_dir = config_dir / "quickshell/sylphrena"
-    if local_shell_dir.exists():
+    if (local_shell_dir / ".git").exists():
         print()
-        _header("Local copy of shell found:")
-        upstream_metadata = fetch_git_metadata(local_shell_dir)
-        local_metadata = fetch_git_metadata(local_shell_dir, "HEAD")
-        _rows(
-            [
-                ("Last merged upstream commit", _commit_from_meta(upstream_metadata)),
-                ("Last local commit", _commit_from_meta(local_metadata)),
-            ]
-        )
+        _header("Local copy of the shell found:")
+        r = subprocess.run(["git", "-C", local_shell_dir, "describe", "--tags", "--match", "v0.*", "--always"],
+                           capture_output=True, text=True)
+        b = subprocess.run(["git", "-C", local_shell_dir, "branch", "--show-current"], capture_output=True, text=True)
+        _rows([("Version", r.stdout.strip() or "unknown"), ("Branch", b.stdout.strip() or "detached")])

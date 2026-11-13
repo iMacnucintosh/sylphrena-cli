@@ -1,7 +1,7 @@
 # sylphrena-cli
 
-The main control script for **Sylphrena Shell**, a fork of the
-[Caelestia](https://github.com/caelestia-dots/shell) dotfiles for Hyprland.
+The main control script for **[Sylphrena](https://github.com/iMacnucintosh/sylphrena-shell)**, a Material You
+shell for Hyprland. It started as the CLI of the [Caelestia](https://github.com/caelestia-dots/shell) dotfiles.
 
 The command is `sylph`.
 
@@ -23,39 +23,8 @@ The command is `sylph`.
 
 ## Installation
 
-### Nix
-
-You can run the CLI directly via `nix run`:
-
-```sh
-nix run github:iMacnucintosh/sylphrena-cli
-```
-
-Or add it to your system configuration:
-
-```nix
-{
-  inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-
-    sylphrena-cli = {
-      url = "github:iMacnucintosh/sylphrena-cli";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-  };
-}
-```
-
-The package is available as `sylphrena-cli.packages.<system>.default`, which can be added to your
-`environment.systemPackages`, `users.users.<username>.packages`, `home.packages` if using
-home-manager, or a devshell. The CLI can then be used via the `sylph` command.
-
-> [!TIP]
-> The default package does not have the shell enabled by default, which is required for full
-> functionality. To enable the shell, use the `with-shell` package.
-
-> [!NOTE]
-> There is no AUR package yet: build it from source (see below) or use the Nix flake.
+It comes with Sylphrena: [its installer](https://github.com/iMacnucintosh/sylphrena-shell#install) installs this
+CLI (the `sylphrena-cli-git` package) along with the shell, and keeps it up to date.
 
 ### Manual installation
 
@@ -150,9 +119,13 @@ subcommands:
     emoji        emoji/glyph utilities
     wallpaper    manage the wallpaper
     resizer      window resizer daemon
-    install      install the Sylphrena Shell
-    update       update the Sylphrena Shell
+    install      install Sylphrena: what is missing on this computer (`sylph install --help`)
+    update       bring Sylphrena and what it installed up to date (`sylph update --help`)
+    ext          manage the shell's extensions or run their commands
 ```
+
+`sylph install` and `sylph update` run the shell's own installer (`scripts/installer.py`); `sylph ext` runs its
+extension tool (`scripts/ext.py`). Their options are the ones of those scripts.
 
 ### User templates
 
@@ -248,10 +221,6 @@ All configuration options are in `~/.config/sylphrena/cli.json`.
                 "move": true
             }
         }
-    },
-    "dots": {
-        "url": "https://github.com/caelestia-dots/caelestia.git",
-        "branch": "main"
     }
 }
 ```
@@ -274,8 +243,7 @@ This is the CLI of the Sylphrena fork. Renames applied on top of
 | Quickshell instance `caelestia` | Quickshell instance `sylphrena` |
 | theme files `caelestia.*` | theme files `sylphrena.*` |
 
-Upstream URLs, the legacy-install detector (which looks for the old Caelestia repository) and the
-`caelestia-meta` package name are intentionally left untouched.
+`install` and `update` no longer deploy the Caelestia dotfiles: they run Sylphrena's installer.
 
 ## Licence
 
